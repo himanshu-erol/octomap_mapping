@@ -233,6 +233,14 @@ protected:
   double m_pointcloudMaxY;
   double m_pointcloudMinZ;
   double m_pointcloudMaxZ;
+
+  double m_updatecloudMinX;
+  double m_updatecloudMaxX;
+  double m_updatecloudMinY;
+  double m_updatecloudMaxY;
+  double m_updatecloudMinZ;
+  double m_updatecloudMaxZ;
+
   double m_occupancyMinZ;
   double m_occupancyMaxZ;
   double m_minSizeX;

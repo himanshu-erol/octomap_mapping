@@ -61,6 +61,14 @@ OctomapServer::OctomapServer(ros::NodeHandle private_nh_)
   m_pointcloudMaxY(std::numeric_limits<double>::max()),
   m_pointcloudMinZ(-std::numeric_limits<double>::max()),
   m_pointcloudMaxZ(std::numeric_limits<double>::max()),
+
+  m_updatecloudMinX(-std::numeric_limits<double>::max()),
+  m_updatecloudMaxX(std::numeric_limits<double>::max()),
+  m_updatecloudMinY(-std::numeric_limits<double>::max()),
+  m_updatecloudMaxY(std::numeric_limits<double>::max()),
+  m_updatecloudMinZ(-std::numeric_limits<double>::max()),
+  m_updatecloudMaxZ(std::numeric_limits<double>::max()),
+
   m_occupancyMinZ(-std::numeric_limits<double>::max()),
   m_occupancyMaxZ(std::numeric_limits<double>::max()),
   m_minSizeX(0.0), m_minSizeY(0.0),
@@ -85,6 +93,14 @@ OctomapServer::OctomapServer(ros::NodeHandle private_nh_)
   private_nh.param("pointcloud_max_y", m_pointcloudMaxY,m_pointcloudMaxY);
   private_nh.param("pointcloud_min_z", m_pointcloudMinZ,m_pointcloudMinZ);
   private_nh.param("pointcloud_max_z", m_pointcloudMaxZ,m_pointcloudMaxZ);
+
+  private_nh.param("updatecloud_min_x", m_updatecloudMinX,m_updatecloudMinX);
+  private_nh.param("updatecloud_max_x", m_updatecloudMaxX,m_updatecloudMaxX);
+  private_nh.param("updatecloud_min_y", m_updatecloudMinY,m_updatecloudMinY);
+  private_nh.param("updatecloud_max_y", m_updatecloudMaxY,m_updatecloudMaxY);
+  private_nh.param("updatecloud_min_z", m_updatecloudMinZ,m_updatecloudMinZ);
+  private_nh.param("updatecloud_max_z", m_updatecloudMaxZ,m_updatecloudMaxZ);
+
   private_nh.param("occupancy_min_z", m_occupancyMinZ,m_occupancyMinZ);
   private_nh.param("occupancy_max_z", m_occupancyMaxZ,m_occupancyMaxZ);
   private_nh.param("min_x_size", m_minSizeX,m_minSizeX);
@@ -292,6 +308,8 @@ void OctomapServer::insertCloudCallback(const sensor_msgs::PointCloud2::ConstPtr
   pass_z.setFilterFieldName("z");
   pass_z.setFilterLimits(m_pointcloudMinZ, m_pointcloudMaxZ);
 
+
+
   PCLPointCloud pc_ground; // segmented ground plane
   PCLPointCloud pc_nonground; // everything else
 
@@ -313,6 +331,29 @@ void OctomapServer::insertCloudCallback(const sensor_msgs::PointCloud2::ConstPtr
     pcl_ros::transformAsMatrix(sensorToBaseTf, sensorToBase);
     pcl_ros::transformAsMatrix(baseToWorldTf, baseToWorld);
 
+//////////////////////////////////////////////////////filtering in sensor frome itself
+    pcl::PassThrough<PCLPoint> pass_x1;
+    pass_x1.setFilterFieldName("x");
+    pass_x1.setFilterLimits(m_updatecloudMinX, m_updatecloudMaxX);
+    pcl::PassThrough<PCLPoint> pass_y1;
+    pass_y1.setFilterFieldName("y");
+    pass_y1.setFilterLimits(m_updatecloudMinY, m_updatecloudMaxY);
+    pcl::PassThrough<PCLPoint> pass_z1;
+    pass_z1.setFilterFieldName("z");
+    pass_z1.setFilterLimits(m_updatecloudMinZ, m_updatecloudMaxZ);
+
+    pass_x1.setInputCloud(pc.makeShared());
+    pass_x1.filter(pc);
+    pass_y1.setInputCloud(pc.makeShared());
+    pass_y1.filter(pc);
+    pass_z1.setInputCloud(pc.makeShared());
+    pass_z1.filter(pc);
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
     // transform pointcloud from sensor frame to fixed robot frame
     pcl::transformPointCloud(pc, pc, sensorToBase);
     pass_x.setInputCloud(pc.makeShared());
@@ -327,6 +368,31 @@ void OctomapServer::insertCloudCallback(const sensor_msgs::PointCloud2::ConstPtr
     pcl::transformPointCloud(pc_ground, pc_ground, baseToWorld);
     pcl::transformPointCloud(pc_nonground, pc_nonground, baseToWorld);
   } else {
+    
+
+
+//////////////////////////////////////////////////////filtering in sensor frome itself
+    pcl::PassThrough<PCLPoint> pass_x1;
+    pass_x1.setFilterFieldName("x");
+    pass_x1.setFilterLimits(m_updatecloudMinX, m_updatecloudMaxX);
+    pcl::PassThrough<PCLPoint> pass_y1;
+    pass_y1.setFilterFieldName("y");
+    pass_y1.setFilterLimits(m_updatecloudMinY, m_updatecloudMaxY);
+    pcl::PassThrough<PCLPoint> pass_z1;
+    pass_z1.setFilterFieldName("z");
+    pass_z1.setFilterLimits(m_updatecloudMinZ, m_updatecloudMaxZ);
+
+    pass_x1.setInputCloud(pc.makeShared());
+    pass_x1.filter(pc);
+    pass_y1.setInputCloud(pc.makeShared());
+    pass_y1.filter(pc);
+    pass_z1.setInputCloud(pc.makeShared());
+    pass_z1.filter(pc);
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
     // directly transform to map frame:
     pcl::transformPointCloud(pc, pc, sensorToWorld);
 
